@@ -76,19 +76,19 @@
 
 👉 To start MailDev (if installed globally):
 
+MailDev runs at:
+SMTP → port 1025
+Web UI → http://localhost:1080**
+
 ```bash
 npm install -g maildev
 maildev
-
-MailDev runs at:
-SMTP → port 1025
-Web UI → http://localhost:1080
-
+```
 ---
 ## How to Run
 
 ### 1️⃣ Clone the repo
 
 ```bash
-git clone https://github.com/yourusername/worktrack.git
+git clone https://github.com/David-Fu-code/WorkTrack.git
 cd worktrack-auth-backend
