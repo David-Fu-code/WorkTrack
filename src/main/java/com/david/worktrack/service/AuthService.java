@@ -1,21 +1,21 @@
 package com.david.worktrack.service;
 
+import com.david.worktrack.dto.AuthResponse;
 import com.david.worktrack.dto.LoginRequest;
 import com.david.worktrack.dto.RegisterRequest;
 import com.david.worktrack.email.EmailSender;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.entity.AppUserRole;
+import com.david.worktrack.refreshToken.RefreshToken;
+import com.david.worktrack.refreshToken.RefreshTokenService;
 import com.david.worktrack.repository.AppUserRepository;
 import com.david.worktrack.service.token.ConfirmationToken;
 import com.david.worktrack.service.token.ConfirmationTokenService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -30,6 +30,8 @@ public class AuthService {
     private final ConfirmationTokenService confirmationTokenService;
     private final JwtService jwtService;
     private final EmailSender emailSender;
+    private final RefreshTokenService refreshTokenService;
+    private AuthResponse authResponse;
 
     /**
      * Registers a new user.
@@ -46,6 +48,7 @@ public class AuthService {
                 .email(request.getEmail()) // Sets email
                 .password(bCryptPasswordEncoder.encode(request.getPassword())) // Encodes password
                 .appUserRole(AppUserRole.USER) // Sets role to USER (default role)
+                .displayName(request.getDisplayName())
                 .enabled(false)  // Needs email confirm
                 .locked(false) // Account is not blocked
                 .verified(false) // Needs email confirm
@@ -102,7 +105,7 @@ public class AuthService {
 
     }
 
-    public String login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         // Load User
         AppUser user = appUserRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new UsernameNotFoundException("User not found"));
@@ -117,8 +120,10 @@ public class AuthService {
             throw new IllegalStateException("Email not confirmed. Please confirm your email.");
         }
 
-        // Generate JWT token
-        return jwtService.generateToken(user.getEmail());
+        // Generate JWT token & Refresh Token
+        String accessToken  = jwtService.generateToken(user.getEmail());
+        String refreshToken = refreshTokenService.createRefreshToken(user);
+        return new AuthResponse(accessToken, refreshToken);
     }
 
     private String buildEmail(String name, String link) {
@@ -127,5 +132,13 @@ public class AuthService {
                 + "<a href=\"" + link + "\">Confirm Account</a>"
                 + "<p>The link will expire in 15 minutes.</p>"
                 + "<p>See you soon!</p>";
+    }
+
+    public AuthResponse refreshToken(String refreshTokenValue) {
+        RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
+
+        String newAccessToken = jwtService.generateToken(refreshToken.getAppUser().getEmail());
+
+        return new AuthResponse(newAccessToken, refreshTokenValue);
     }
 }

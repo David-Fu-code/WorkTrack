@@ -28,6 +28,8 @@ public class AppUser implements UserDetails {
 
     private String password;
 
+    private String displayName;
+
     @Enumerated(EnumType.STRING)
     private AppUserRole appUserRole; // using enum
 
