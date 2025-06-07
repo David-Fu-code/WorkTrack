@@ -96,9 +96,7 @@ cd worktrack-auth-backend
 ---
 ## How to Test the API (Example Flows)
 ### 1️⃣ Register a new user
-http
-Copiar
-Editar
+```bash
 POST /api/v1/auth/register
 Content-Type: application/json
 
@@ -107,12 +105,12 @@ Content-Type: application/json
     "password": "YourPassword123!",
     "displayName": "Test User"
 }
+```
 ✅ An email confirmation will be sent → view it in MailDev → confirm the email.
-
+---
 ### 2️⃣ Login
+```bash
 http
-Copiar
-Editar
 POST /api/v1/auth/login
 Content-Type: application/json
 
@@ -120,64 +118,60 @@ Content-Type: application/json
     "email": "test@example.com",
     "password": "YourPassword123!"
 }
+```
 ✅ Response:
 
-json
-Copiar
-Editar
+```bash
 {
     "accessToken": "JWT_TOKEN_HERE",
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
+```
+---
 ### 3️⃣ Using the access token
 For all protected endpoints → add header:
 
-http
-Copiar
-Editar
+```bash
 Authorization: Bearer JWT_TOKEN_HERE
 Example:
-
-http
-Copiar
-Editar
+```
+```bash
 GET /api/v1/auth/users/me
 Authorization: Bearer JWT_TOKEN_HERE
+```
+---
 ### 4️⃣ Refresh Token
-http
-Copiar
-Editar
+```bash
 POST /api/v1/auth/refresh-token
 Content-Type: application/json
 
 {
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
+```
+---
 ### 5️⃣ Logout
-http
-Copiar
-Editar
+```bash
 POST /api/v1/auth/logout
 Content-Type: application/json
 
 {
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
+```
+---
 ### 6️⃣ Password Reset - Forgot Password
-http
-Copiar
-Editar
+```bash
 POST /api/v1/auth/forgot-password
 Content-Type: application/json
 
 {
     "email": "test@example.com"
 }
+```
 ✅ A password reset email will be sent → view in MailDev → get token → use it:
 
-http
-Copiar
-Editar
+```bash
 POST /api/v1/auth/reset-password
 Content-Type: application/json
 
@@ -185,10 +179,10 @@ Content-Type: application/json
     "token": "TOKEN_FROM_EMAIL",
     "newPassword": "NewPassword123!"
 }
+```
+---
 ### 7️⃣ Update Profile
-http
-Copiar
-Editar
+```bash
 PUT /api/v1/auth/users/me
 Authorization: Bearer JWT_TOKEN_HERE
 Content-Type: application/json
@@ -196,10 +190,10 @@ Content-Type: application/json
 {
     "name": "New Display Name"
 }
+```
+---
 ### 8️⃣ Change Password
-http
-Copiar
-Editar
+```bash
 PUT /api/v1/auth/users/me/password
 Authorization: Bearer JWT_TOKEN_HERE
 Content-Type: application/json
@@ -208,7 +202,7 @@ Content-Type: application/json
     "currentPassword": "YourPassword123!",
     "newPassword": "YourNewPassword123!"
 }
-
+```
 ---
 ## Notes
 
