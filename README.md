@@ -69,6 +69,10 @@
 ✅ This project was fully tested using Postman.
 
 ---
+## Postman Collection
+
+👉 [Download WorkTrack-Auth-API.postman_collection.json](./postman/WorkTrack-Auth-API.postman_collection.json)
+---
 
 ## Email Testing (MailDev)
 
