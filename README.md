@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/ebd40ed0-6e1e-49f3-bdca-e0d040890821)# WorkTrack Auth Backend - Spring Boot JWT Authentication
+# WorkTrack Auth Backend - Spring Boot JWT Authentication
 
 🚀 **Production-ready Backend Authentication System** built with Java + Spring Boot + PostgreSQL
 
@@ -228,6 +228,7 @@ Content-Type: application/json
 ## Author
 David.Fu - Junior Backend Developer
 
+--
 ##License
 MIT
 
