@@ -52,15 +52,15 @@
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET    | /api/v1/auth/users/me | Get current user profile |
-| PUT    | /api/v1/auth/users/me | Update profile (display name) |
-| PUT    | /api/v1/auth/users/me/password | Change password |
+| GET    | /api/v1/users/me | Get current user profile |
+| PUT    | /api/v1/users/me | Update profile (display name) |
+| PUT    | /api/v1/users/me/password | Change password |
 
 ### Admin
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET    | /api/v1/auth/admin/users | Get list of all users (ADMIN only) |
+| GET    | /api/v1/admin/users | Get list of all users (ADMIN only) |
 
 ---
 
@@ -91,7 +91,6 @@ maildev
 
 ```bash
 git clone https://github.com/David-Fu-code/WorkTrack.git
-cd worktrack-auth-backend
 ```
 ---
 ## How to Test the API (Example Flows)
@@ -228,7 +227,10 @@ Content-Type: application/json
 
 ## Author
 
-David.Fu - Junior Backend Developer
+**David Fu**  
+[LinkedIn](https://linkedin.com/in/david-fu-ji) · [GitHub](https://github.com/David-Fu-code)  
+
+Junior Backend Developer · Java | Spring Boot | PostgreSQL · Based in Dublin / Remote
 
 ---
 
@@ -238,16 +240,14 @@ MIT
 
 ---
 
-## Improvements (Future Work)
+## Improvements (Planned)
 
-Add Docker Compose for PostgreSQL
-
-Add Pagination to /admin/users
-
-Add Integration Tests
-
-Add Swagger Documentation
-
+- [ ] Add Docker Compose for PostgreSQL (easy local setup)
+- [ ] Add pagination and filtering to `/admin/users`
+- [ ] Add integration tests with Testcontainers
+- [ ] Add Swagger / OpenAPI documentation
+- [ ] Add email rate-limiting (to prevent spam on forgot-password)
+- [ ] Add account deletion flow
 
 
 
