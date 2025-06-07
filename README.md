@@ -64,6 +64,27 @@
 
 ---
 
+## Postman
+
+✅ This project was fully tested using Postman.
+
+---
+
+## Email Testing (MailDev)
+
+✅ For testing email confirmation and password reset flows, [MailDev](https://maildev.github.io/maildev/) was used.
+
+👉 To start MailDev (if installed globally):
+
+```bash
+npm install -g maildev
+maildev
+
+MailDev runs at:
+SMTP → port 1025
+Web UI → http://localhost:1080
+
+---
 ## How to Run
 
 ### 1️⃣ Clone the repo
