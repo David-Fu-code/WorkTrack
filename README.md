@@ -109,7 +109,7 @@ Content-Type: application/json
 }
 ```
 ✅ An email confirmation will be sent → view it in MailDev → confirm the email.
---
+---
 
 ### 2️⃣ Login
 ```bash
@@ -131,7 +131,7 @@ json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
---
+---
 
 ### 3️⃣ Using the access token
 For all protected endpoints → add header:
@@ -146,7 +146,7 @@ http
 GET /api/v1/auth/users/me
 Authorization: Bearer JWT_TOKEN_HERE
 ```
---
+---
 ### 4️⃣ Refresh Token
 ```bash
 http
@@ -157,7 +157,7 @@ Content-Type: application/json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
---
+---
 ### 5️⃣ Logout
 ```bash
 http
@@ -168,7 +168,7 @@ Content-Type: application/json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
---
+---
 ### 6️⃣ Password Reset - Forgot Password
 ```bash
 http
@@ -191,7 +191,7 @@ Content-Type: application/json
     "newPassword": "NewPassword123!"
 }
 ```
---
+---
 ### 7️⃣ Update Profile
 ```bash
 http
@@ -203,7 +203,7 @@ Content-Type: application/json
     "name": "New Display Name"
 }
 ```
---
+---
 ### 8️⃣ Change Password
 ```bash
 http
@@ -219,15 +219,16 @@ Content-Type: application/json
 ---
 ## Notes
 
-✅ All flows require proper usage of JWT access token → in Authorization: Bearer ... header.
-✅ Email confirmations and password reset tokens can be viewed in MailDev: http://localhost:1080.
-✅ A complete Postman collection is available to test all flows.
+
+- ✅ All flows require proper usage of JWT access token → in Authorization: Bearer ... header.
+- ✅ Email confirmations and password reset tokens can be viewed in MailDev: http://localhost:1080.
+- ✅ A complete Postman collection is available to test all flows.
 
 ---
 ## Author
 David.Fu - Junior Backend Developer
 
-License
+##License
 MIT
 
 ---
