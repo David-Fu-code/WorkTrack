@@ -1,4 +1,4 @@
-# WorkTrack Auth Backend - Spring Boot JWT Authentication
+![image](https://github.com/user-attachments/assets/ebd40ed0-6e1e-49f3-bdca-e0d040890821)# WorkTrack Auth Backend - Spring Boot JWT Authentication
 
 🚀 **Production-ready Backend Authentication System** built with Java + Spring Boot + PostgreSQL
 
@@ -98,6 +98,7 @@ cd worktrack-auth-backend
 
 ### 1️⃣ Register a new user
 ```bash
+http
 POST /api/v1/auth/register
 Content-Type: application/json
 
@@ -108,6 +109,7 @@ Content-Type: application/json
 }
 ```
 ✅ An email confirmation will be sent → view it in MailDev → confirm the email.
+--
 
 ### 2️⃣ Login
 ```bash
@@ -123,26 +125,31 @@ Content-Type: application/json
 ✅ Response:
 
 ```bash
+json
 {
     "accessToken": "JWT_TOKEN_HERE",
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
+--
 
 ### 3️⃣ Using the access token
 For all protected endpoints → add header:
 
 ```bash
+http
 Authorization: Bearer JWT_TOKEN_HERE
 ```
 Example:
 ```bash
+http
 GET /api/v1/auth/users/me
 Authorization: Bearer JWT_TOKEN_HERE
 ```
-
+--
 ### 4️⃣ Refresh Token
 ```bash
+http
 POST /api/v1/auth/refresh-token
 Content-Type: application/json
 
@@ -150,9 +157,10 @@ Content-Type: application/json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
-
+--
 ### 5️⃣ Logout
 ```bash
+http
 POST /api/v1/auth/logout
 Content-Type: application/json
 
@@ -160,9 +168,10 @@ Content-Type: application/json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
-
+--
 ### 6️⃣ Password Reset - Forgot Password
 ```bash
+http
 POST /api/v1/auth/forgot-password
 Content-Type: application/json
 
@@ -173,6 +182,7 @@ Content-Type: application/json
 ✅ A password reset email will be sent → view in MailDev → get token → use it:
 
 ```bash
+http
 POST /api/v1/auth/reset-password
 Content-Type: application/json
 
@@ -181,9 +191,10 @@ Content-Type: application/json
     "newPassword": "NewPassword123!"
 }
 ```
-
+--
 ### 7️⃣ Update Profile
 ```bash
+http
 PUT /api/v1/auth/users/me
 Authorization: Bearer JWT_TOKEN_HERE
 Content-Type: application/json
@@ -192,9 +203,10 @@ Content-Type: application/json
     "name": "New Display Name"
 }
 ```
-
+--
 ### 8️⃣ Change Password
 ```bash
+http
 PUT /api/v1/auth/users/me/password
 Authorization: Bearer JWT_TOKEN_HERE
 Content-Type: application/json
