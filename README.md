@@ -95,6 +95,7 @@ cd worktrack-auth-backend
 ```
 ---
 ## How to Test the API (Example Flows)
+
 ### 1️⃣ Register a new user
 ```bash
 POST /api/v1/auth/register
@@ -107,7 +108,7 @@ Content-Type: application/json
 }
 ```
 ✅ An email confirmation will be sent → view it in MailDev → confirm the email.
----
+
 ### 2️⃣ Login
 ```bash
 http
@@ -127,19 +128,19 @@ Content-Type: application/json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
----
+
 ### 3️⃣ Using the access token
 For all protected endpoints → add header:
 
 ```bash
 Authorization: Bearer JWT_TOKEN_HERE
-Example:
 ```
+Example:
 ```bash
 GET /api/v1/auth/users/me
 Authorization: Bearer JWT_TOKEN_HERE
 ```
----
+
 ### 4️⃣ Refresh Token
 ```bash
 POST /api/v1/auth/refresh-token
@@ -149,7 +150,7 @@ Content-Type: application/json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
----
+
 ### 5️⃣ Logout
 ```bash
 POST /api/v1/auth/logout
@@ -159,7 +160,7 @@ Content-Type: application/json
     "refreshToken": "REFRESH_TOKEN_HERE"
 }
 ```
----
+
 ### 6️⃣ Password Reset - Forgot Password
 ```bash
 POST /api/v1/auth/forgot-password
@@ -180,7 +181,7 @@ Content-Type: application/json
     "newPassword": "NewPassword123!"
 }
 ```
----
+
 ### 7️⃣ Update Profile
 ```bash
 PUT /api/v1/auth/users/me
@@ -191,7 +192,7 @@ Content-Type: application/json
     "name": "New Display Name"
 }
 ```
----
+
 ### 8️⃣ Change Password
 ```bash
 PUT /api/v1/auth/users/me/password
