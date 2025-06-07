@@ -23,7 +23,7 @@
 
 ## Tech Stack
 
-- Java 17
+- Java 21
 - Spring Boot 3
 - Spring Security 6
 - JWT (JSON Web Tokens)
@@ -69,5 +69,5 @@
 ### 1️⃣ Clone the repo
 
 ```bash
-git clone https://github.com/yourusername/worktrack-auth-backend.git
+git clone https://github.com/yourusername/worktrack.git
 cd worktrack-auth-backend
