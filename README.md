@@ -228,7 +228,7 @@ Content-Type: application/json
     "newPassword": "YourNewPassword123!"
 }
 ```
-### 9 JobApplication (Create)
+### 9️⃣ JobApplication (Create)
 ```bash
 http
 POST http://localhost:8080/api/v1/applications
@@ -244,14 +244,14 @@ Content-Type: application/json
 }
 ```
 
-### 10 JobApplication (Get all applications per user)
+### 🔟 JobApplication (Get all applications per user)
 ```bash
 GET http://localhost:8080/api/v1/applications
 Authorization: Bearer <token>
 }
 ```
 
-### 11 JobApplication (update)
+### 1️⃣1️⃣ JobApplication (update)
 ```bash
 json
 PUT http://localhost:8080/api/v1/applications/1
@@ -267,7 +267,7 @@ Content-Type: application/json
 }
 ```
 
-### 12 JobApplication (Delete)
+### 1️⃣2️⃣ JobApplication (Delete)
 ```bash
 http
 DELETE http://localhost:8080/api/v1/applications/1
