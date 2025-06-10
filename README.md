@@ -62,6 +62,15 @@
 |--------|----------|-------------|
 | GET    | /api/v1/admin/users | Get list of all users (ADMIN only) |
 
+## Job Applications
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST   | /api/v1/applications | Create a new application |
+| GET    | /api/v1/applications | Get user's applications |
+| PUT    | /api/v1/applications/{id} | Update an application |
+| DELETE | /api/v1/applications/{id} | Delete an application |
+
 ---
 
 ## Postman
@@ -218,6 +227,51 @@ Content-Type: application/json
     "currentPassword": "YourPassword123!",
     "newPassword": "YourNewPassword123!"
 }
+```
+### 9 JobApplication (Create)
+```bash
+http
+POST http://localhost:8080/api/v1/applications
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+    "companyName": "Google",
+    "position": "Backend Developer",
+    "status": "APPLIED",
+    "appliedDate": "2025-06-08",
+    "notes": "Referred by a friend"
+}
+```
+
+### 10 JobApplication (Get all applications per user)
+```bash
+GET http://localhost:8080/api/v1/applications
+Authorization: Bearer <token>
+}
+```
+
+### 11 JobApplication (update)
+```bash
+json
+PUT http://localhost:8080/api/v1/applications/1
+Authorization: Bearer <your_token>
+Content-Type: application/json
+
+{
+  "companyName": "Google",
+  "position": "Backend Developer",
+  "status": "INTERVIEW",
+  "appliedDate": "2025-06-08",
+  "notes": "They sent me a HackerRank test"
+}
+```
+
+### 12 JobApplication (Delete)
+```bash
+http
+DELETE http://localhost:8080/api/v1/applications/1
+Authorization: Bearer <your_token>
 ```
 ---
 ## Notes
