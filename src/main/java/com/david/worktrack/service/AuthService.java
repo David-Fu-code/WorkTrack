@@ -92,7 +92,7 @@ public class AuthService {
 
         // ✅ Even if already confirmed, return success
         if (confirmationToken.getConfirmedAt() != null) {
-            System.out.println("⚠️ Token already confirmed. Returning OK.");
+            //System.out.println("⚠️ Token already confirmed. Returning OK.");
             return "Email already confirmed";
         }
 
