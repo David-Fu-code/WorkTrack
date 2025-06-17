@@ -81,29 +81,28 @@ public class AuthService {
 
     @Transactional
     public String confirmToken(String token) {
-
-        // Find token
         ConfirmationToken confirmationToken = confirmationTokenService
                 .getToken(token)
                 .orElseThrow(() -> new IllegalStateException("Token not found"));
 
-        // Check confirmed
-        if(confirmationToken.getConfirmedAt() != null) {
-            throw new IllegalStateException("Email already confirmed");
-        }
-
         // Check if token expired
-        if (confirmationToken.getExpiredAt().isBefore(LocalDateTime.now())){
+        if (confirmationToken.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Token expired");
         }
 
-        // Token confirmed
-        confirmationTokenService.setConfirmedAt(token);
-        // Enable User
-        appUserService.enableAppUser(confirmationToken.getAppUser().getEmail());
-        return "Confirmed";
+        // ✅ Even if already confirmed, return success
+        if (confirmationToken.getConfirmedAt() != null) {
+            System.out.println("⚠️ Token already confirmed. Returning OK.");
+            return "Email already confirmed";
+        }
 
+        // Confirm now
+        confirmationTokenService.setConfirmedAt(token);
+        appUserService.enableAppUser(confirmationToken.getAppUser().getEmail());
+
+        return "Confirmed";
     }
+
 
     public AuthResponse login(LoginRequest request) {
         // Load User
