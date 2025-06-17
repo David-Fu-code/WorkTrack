@@ -2,6 +2,7 @@ package com.david.worktrack.controller;
 
 import com.david.worktrack.dto.JobApplicationRequest;
 import com.david.worktrack.dto.JobApplicationResponse;
+import com.david.worktrack.dto.UpdateJobStatusRequest;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.entity.JobApplication;
 import com.david.worktrack.repository.AppUserRepository;
@@ -115,6 +116,31 @@ public class JobApplicationController {
 
         return ResponseEntity.ok("Job Application deleted");
     }
+
+@PatchMapping("/{id}") // Change Status
+public ResponseEntity<String> updateJobStatus(
+        @PathVariable Long id,
+        @RequestBody UpdateJobStatusRequest request,
+        Authentication authentication) {
+
+    String email = authentication.getName();
+    AppUser user = appUserRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+    JobApplication app = jobApplicationRepository.findById(id)
+            .orElseThrow(() -> new IllegalStateException("Job Application not found"));
+
+    // Check ownership
+    if (!app.getAppUser().getId().equals(user.getId())) {
+        return ResponseEntity.status(403).body("You can only update your own applications");
+    }
+
+    // ✅ Update status only
+    app.setStatus(request.getStatus());
+    jobApplicationRepository.save(app);
+
+    return ResponseEntity.ok("Status updated");
+}
 
 
 }
