@@ -1,46 +1,47 @@
 package com.david.worktrack.config;
 
-import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.service.AppUserService;
 import com.david.worktrack.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
+
+
 @Component
-@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    // Service responsible for JWT operations (extract username, validate token, etc.)
     private final JwtService jwtService;
+
+    // Service used to load user details from database
     private final AppUserService appUserService;
 
+    // Logger for debugging authentication flow
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
+
+    // Constructor injection of required dependencies
+    public JwtAuthFilter(JwtService jwtService, AppUserService appUserService){
+        this.jwtService = jwtService;
+        this.appUserService = appUserService;
+    }
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-
-        if (path.startsWith("/api/v1/auth/register")
-            || path.startsWith("/api/v1/auth/login")
-            || path.startsWith("/api/v1/auth/confirm")) {
-            filterChain.doFilter(request, response); // skip JWT check for public routes (No need to authenticated)
-            return;
-        }
-
-        // This reads the HTTP header
+        // Extract Authorization header for request
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
 
         // if no Authorization header or not Bearer -> skip
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -48,40 +49,46 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Extract JWT token
-        jwt = authHeader.substring(7); // Remove "Bearer " (7 characters) → get the raw token.
-        // Store username (email)
-        username = jwtService.extractUsername(jwt);
-        System.out.println(">>> JWT: " + jwt);
-        System.out.println(">>> Username extracted: " + username);
+        // Extract raw JWT token (Remove "Bearer " (7 characters))
+        final String jwt = authHeader.substring(7);
 
-        // if username not null and user not already authenticated
-        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Load full user (roles, permissions, etc.)
-            UserDetails userDetails = appUserService.loadUserByUsername(username);
-            boolean isValid = jwtService.isTokenValid(jwt, userDetails.getUsername());
-            System.out.println(">>> Is token valid? " + isValid);
+        // Extract username from JWT payload
+        final String username = jwtService.extractUsername(jwt);
 
-            if (isValid) {
-                System.out.println(">>> Token is VALID, setting Authentication");
+        log.debug("JWT extracted: {}", jwt);
+        log.debug("Username extracted: {}", username);
 
-                // Build authentication token / This tells Spring Security → "this user is now authenticated".
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
+        // Proceed ony if username exists and user is not already authenticated
+        if (username != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            // Validate token before trusting it
+            if (jwtService.isTokenValid(jwt, username)) {
+
+                // Load full user details (roles, authorities, etc.)
+                UserDetails userDetails = appUserService.loadUserByUsername(username);
+
+                // Create authentication token for Spring Security context
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                // Attach request metadata (IP, session info, etc.)
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
                 );
 
-                // Attach request details (IP address of client, More request metadata, etc.)
-                // adds request metadata to the token — so later in the request chain, the app (or Spring Security) can access it.
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Set in SecurityContext / Now → the user is authenticated
+                // Set authenticated user in Security context
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                log.debug("Authentication set for user: {}", username);
             }
         }
 
-        //Continue with next filter / After setting authentication, the request continues to the controller.
+        // Continue filter chain execution
         filterChain.doFilter(request, response);
     }
 }

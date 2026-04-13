@@ -1,7 +1,5 @@
 package com.david.worktrack.config;
 
-import com.david.worktrack.service.AppUserService;
-import com.david.worktrack.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,37 +18,41 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class AppUserSecurityConfig {
 
-    private final AppUserService appUserService;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         return http
+                // Disable CSRF because we use JWT (stateless API)
                 .csrf(AbstractHttpConfigurer::disable)
+
+                // Public endpoints vs secured endpoints
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**","/api/v1/forgot-password",
-                                        "/api/v1/reset-password").permitAll()
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/api/v1/forgot-password",
+                                "/api/v1/reset-password"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
+
+                // Stateless session management (no server session)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                // Add JWT filter before Spring Security authentication
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
+    // Authentication manager used for login process
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    // Password encoder for secure password hashing
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    @Bean
-    public JwtAuthFilter jwtAuthFilter(JwtService jwtService, AppUserService appUserService) {
-        return new JwtAuthFilter(jwtService, appUserService);
-    }
-
 }
