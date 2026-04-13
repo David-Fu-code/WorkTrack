@@ -63,7 +63,7 @@ public class AuthService {
         ConfirmationToken confirmationToken = ConfirmationToken.builder()
                 .token(token)
                 .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
                 .appUser(appUser)
                 .build();
 
@@ -81,16 +81,28 @@ public class AuthService {
 
     @Transactional
     public String confirmToken(String token) {
-        ConfirmationTokenService.ConfirmationResult result = confirmationTokenService.setConfirmedAt(token);
 
-        if (result.firstTime()) {
-            AppUser user = result.user();
-            user.setEnabled(true);
-            user.setVerified(true);
-            appUserRepository.save(user);
+        // Find token
+        ConfirmationToken confirmationToken = confirmationTokenService
+                .getToken(token)
+                .orElseThrow(() -> new IllegalStateException("Token not found"));
+
+        // Check confirmed
+        if(confirmationToken.getConfirmedAt() != null) {
+            throw new IllegalStateException("Email already confirmed");
         }
 
-        return result.message();
+        // Check if token expired
+        if (confirmationToken.getExpiredAt().isBefore(LocalDateTime.now())){
+            throw new IllegalStateException("Token expired");
+        }
+
+        // Token confirmed
+        confirmationTokenService.setConfirmedAt(token);
+        // Enable User
+        appUserService.enableAppUser(confirmationToken.getAppUser().getEmail());
+        return "Confirmed";
+
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -142,7 +154,7 @@ public class AuthService {
         ConfirmationToken confirmationToken = ConfirmationToken.builder()
                 .token(token)
                 .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
                 .appUser(user)
                 .build();
 
@@ -162,7 +174,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException("Invalid or expired token"));
 
         // Check if token not expired
-        if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (confirmationToken.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Token expired");
         }
 
