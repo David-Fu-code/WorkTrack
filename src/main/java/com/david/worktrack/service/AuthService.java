@@ -63,7 +63,7 @@ public class AuthService {
         ConfirmationToken confirmationToken = ConfirmationToken.builder()
                 .token(token)
                 .createdAt(LocalDateTime.now())
-                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
                 .appUser(appUser)
                 .build();
 
@@ -93,7 +93,7 @@ public class AuthService {
         }
 
         // Check if token expired
-        if (confirmationToken.getExpiredAt().isBefore(LocalDateTime.now())){
+        if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())){
             throw new IllegalStateException("Token expired");
         }
 
@@ -154,7 +154,7 @@ public class AuthService {
         ConfirmationToken confirmationToken = ConfirmationToken.builder()
                 .token(token)
                 .createdAt(LocalDateTime.now())
-                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
                 .appUser(user)
                 .build();
 
@@ -174,7 +174,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException("Invalid or expired token"));
 
         // Check if token not expired
-        if (confirmationToken.getExpiredAt().isBefore(LocalDateTime.now())) {
+        if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Token expired");
         }
 

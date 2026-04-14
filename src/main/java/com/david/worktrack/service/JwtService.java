@@ -1,8 +1,11 @@
 package com.david.worktrack.service;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -10,8 +13,14 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-    // SECRET KEY (used to sign and verify the JWT)-> should be 256-bit (32+ characters)
-    private final static String  SECRET_KEY = "your-256-bit-secret-your-256-bit-secret-your-256-bit-secret";
+
+    // Secret key used to sign and verify JWT
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
+
+    // Token expiration time (in milliseconds)
+    @Value("${jwt.expiration}")
+    private long EXPIRATION_TIME;
 
     // Converts the SECRET KEY into a Key object → ready to sign or verify JWT.
     private Key getSingKey() {
@@ -23,44 +32,33 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(username) // Store username
                 .setIssuedAt(new Date(System.currentTimeMillis())) // When token is created
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // expires in 24h
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // expires in 4h
                 .signWith(getSingKey(), SignatureAlgorithm.HS256) // Signs the token -> makes it tamper-proof -> cannot be modified
                 .compact();
     }
 
-    // JWS → signed JWT
-    // JWT → generic token format, can be signed (JWS) or not signed (rare), or encrypted (JWE)
-    // Extract username from token -> Reads the username (subject) from the token.
+    // Extract username (subject) from token
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSingKey())
-                .build()
-                .parseClaimsJws(token) // This case is ClaimsJws(signed token) and not ClaimsJwt
-                .getBody()
-                .getSubject();
+        return extractAllClaims(token).getSubject();
     }
 
-    // Validate token -> is username correct AND token not expired
-    /* We check:
-    Is token signed correctly?
-    Is token not expired?
-    Is token really for this user?
-    */
+    // Validate token : correct user and not expired
     public boolean isTokenValid(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username)) && !isTokenExpired(token);
+        return username.equals(extractUsername(token)) && !isTokenExpired(token);
     }
 
     // Check if token is expired
     private boolean isTokenExpired(String token) {
-        Date expiration = Jwts.parserBuilder()
+        return extractAllClaims(token).getExpiration().before(new Date());
+    }
+
+    // Extract all claims from token (centralized parsing logic)
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(getSingKey())
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
-
-        return expiration.before(new Date());
+                .getBody();
     }
 
 
