@@ -29,4 +29,4 @@ server:
 
 jwt:
   secret: your-256-bit-secret-your-256-bit-secret-your-256-bit-secret
-  expiration: 14400000 # 4 hours in milliseconds
+  expiration: 900000 # 15 min in milliseconds

@@ -28,14 +28,11 @@ public class AuthController {
         return ResponseEntity.ok(tokens);
     }
 
-    @GetMapping("/confirm")
+    @GetMapping("/confirm-email")
     public ResponseEntity<String> confirm(@RequestParam("token") String token){
-        try {
-            String result = authService.confirmToken(token);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        String result = authService.confirmToken(token);
+        return ResponseEntity.ok(result);
+
     }
 
     @GetMapping("/test-protected")

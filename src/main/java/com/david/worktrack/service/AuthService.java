@@ -71,7 +71,7 @@ public class AuthService {
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
         // Confirmation link
-        String link = "http://localhost:5173/confirm?token=" + token;
+        String link = "http://localhost:3000/confirm?token=" + token;
 
         // Send Email
         emailSender.send(request.getEmail(), buildEmail(request.getEmail(), link));

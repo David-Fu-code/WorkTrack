@@ -71,7 +71,7 @@ public class JobApplicationController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateJobApplication(@PathVariable Long id, @RequestBody JobApplicationRequest request, Authentication authentication) {
+    public ResponseEntity<String> updateJobApplication(@PathVariable("id") Long id, @RequestBody JobApplicationRequest request, Authentication authentication) {
 
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
