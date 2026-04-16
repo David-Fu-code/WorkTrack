@@ -1,5 +1,6 @@
 package com.david.worktrack.service.token;
 
+import com.david.worktrack.exception.InvalidTokenException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -26,7 +27,7 @@ public class ConfirmationTokenService {
     @Transactional
     public ConfirmationResult setConfirmedAt(String token) {
         ConfirmationToken confirmationToken = confirmationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalStateException("❌ Invalid or expired confirmation token"));
+                .orElseThrow(() -> new InvalidTokenException("❌ Invalid or expired confirmation token"));
 
         String message;
         boolean firstTime = false;
@@ -34,7 +35,7 @@ public class ConfirmationTokenService {
         if (confirmationToken.getConfirmedAt() != null) {
             message = "✅ Email already confirmed!";
         } else if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("❌ Invalid or expired confirmation token");
+            throw new InvalidTokenException("❌ Invalid or expired confirmation token");
         } else {
             confirmationToken.setConfirmedAt(LocalDateTime.now());
             confirmationTokenRepository.save(confirmationToken);

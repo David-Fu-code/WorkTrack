@@ -5,6 +5,8 @@ import com.david.worktrack.dto.JobApplicationResponse;
 import com.david.worktrack.dto.UpdateJobStatusRequest;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.entity.JobApplication;
+import com.david.worktrack.exception.BusinessException;
+import com.david.worktrack.exception.ResourceNotFoundException;
 import com.david.worktrack.repository.AppUserRepository;
 import com.david.worktrack.repository.JobApplicationRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,7 @@ public class JobApplicationController {
 
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() ->  new UsernameNotFoundException("User not found"));
+                .orElseThrow(() ->  new ResourceNotFoundException("User not found"));
 
         JobApplication application = JobApplication.builder()
                 .companyName(request.getCompanyName())
@@ -53,7 +55,7 @@ public class JobApplicationController {
 
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         List<JobApplication> applications = jobApplicationRepository.findByAppUser(user);
 
@@ -75,10 +77,10 @@ public class JobApplicationController {
 
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         JobApplication app = jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Job Application not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
 
         // Security: allow only owner to update
         if(!app.getAppUser().getId().equals(user.getId())) {
@@ -102,10 +104,10 @@ public class JobApplicationController {
     public ResponseEntity<String> deleteJobApplication(@PathVariable Long id, Authentication authentication) {
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         JobApplication app = jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Job Application not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
 
         // Only the owner can delete it
         if (!app.getAppUser().getId().equals(user.getId())){
@@ -125,10 +127,10 @@ public ResponseEntity<String> updateJobStatus(
 
     String email = authentication.getName();
     AppUser user = appUserRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
     JobApplication app = jobApplicationRepository.findById(id)
-            .orElseThrow(() -> new IllegalStateException("Job Application not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
 
     // Check ownership
     if (!app.getAppUser().getId().equals(user.getId())) {

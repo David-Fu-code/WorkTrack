@@ -2,6 +2,8 @@ package com.david.worktrack.passwordReset;
 
 import com.david.worktrack.email.EmailSender;
 import com.david.worktrack.entity.AppUser;
+import com.david.worktrack.exception.InvalidTokenException;
+import com.david.worktrack.exception.ResourceNotFoundException;
 import com.david.worktrack.repository.AppUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ public class PasswordResetService {
     public void createdPasswordResetToken(String email) {
 
         AppUser appUser = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Generate token
         String token = UUID.randomUUID().toString();
@@ -45,7 +47,7 @@ public class PasswordResetService {
 
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalStateException("Invalid token"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid token"));
 
         if (resetToken.isUsed()){
             throw new IllegalStateException("Token already used");

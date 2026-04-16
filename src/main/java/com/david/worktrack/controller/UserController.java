@@ -2,6 +2,7 @@ package com.david.worktrack.controller;
 
 import com.david.worktrack.dto.*;
 import com.david.worktrack.entity.AppUser;
+import com.david.worktrack.exception.ResourceNotFoundException;
 import com.david.worktrack.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,7 @@ public class UserController {
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserResponse response = new UserResponse(user.getId(), user.getEmail(), user.getDisplayName(), user.getAppUserRole());
         return ResponseEntity.ok(response);
@@ -33,7 +34,7 @@ public class UserController {
     public ResponseEntity<String> updateProfile(@RequestBody UpdateProfileRequest request, Authentication authentication){
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setDisplayName(request.getName());
         appUserRepository.save(user);
@@ -45,7 +46,7 @@ public class UserController {
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication){
         String email = authentication.getName();
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!bCryptPasswordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Current password is incorrect");

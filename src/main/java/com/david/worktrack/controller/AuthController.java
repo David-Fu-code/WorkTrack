@@ -28,7 +28,7 @@ public class AuthController {
         return ResponseEntity.ok(tokens);
     }
 
-    @GetMapping("/confirm-email")
+    @GetMapping("/confirm")
     public ResponseEntity<String> confirm(@RequestParam("token") String token){
         String result = authService.confirmToken(token);
         return ResponseEntity.ok(result);

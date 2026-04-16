@@ -1,6 +1,7 @@
 package com.david.worktrack.refreshToken;
 
 import com.david.worktrack.entity.AppUser;
+import com.david.worktrack.exception.InvalidTokenException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,13 +30,13 @@ public class RefreshTokenService {
     // Check Refresh Token
     public RefreshToken validateRefreshToken(String tokenValue) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(tokenValue)
-                .orElseThrow(() -> new IllegalStateException("Invalid refresh token"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
 
         if (refreshToken.isUsed()) {
-            throw new IllegalStateException("Refresh token already used");
+            throw new InvalidTokenException("Refresh token already used");
         }
         if(refreshToken.getExpiryDate().isBefore(LocalDateTime.now())){
-            throw new IllegalStateException("Expired refresh token");
+            throw new InvalidTokenException("Expired refresh token");
         }
         return refreshToken;
     }
@@ -44,7 +45,7 @@ public class RefreshTokenService {
     @Transactional
     public void invalidateRefreshToken(String tokenValue) {
         RefreshToken token = refreshTokenRepository.findByToken(tokenValue)
-                .orElseThrow(() -> new IllegalStateException("Invalid refresh token"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
 
         token.setUsed(true);
         refreshTokenRepository.save(token);

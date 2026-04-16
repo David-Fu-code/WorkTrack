@@ -6,6 +6,9 @@ import com.david.worktrack.dto.RegisterRequest;
 import com.david.worktrack.email.EmailSender;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.entity.AppUserRole;
+import com.david.worktrack.exception.BusinessException;
+import com.david.worktrack.exception.InvalidTokenException;
+import com.david.worktrack.exception.ResourceNotFoundException;
 import com.david.worktrack.refreshToken.RefreshToken;
 import com.david.worktrack.refreshToken.RefreshTokenService;
 import com.david.worktrack.repository.AppUserRepository;
@@ -85,16 +88,16 @@ public class AuthService {
         // Find token
         ConfirmationToken confirmationToken = confirmationTokenService
                 .getToken(token)
-                .orElseThrow(() -> new IllegalStateException("Token not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
 
         // Check confirmed
         if(confirmationToken.getConfirmedAt() != null) {
-            throw new IllegalStateException("Email already confirmed");
+            throw new BusinessException("Email already confirmed");
         }
 
         // Check if token expired
         if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new IllegalStateException("Token expired");
+            throw new InvalidTokenException("Token expired");
         }
 
         // Token confirmed
@@ -108,16 +111,16 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Load User
         AppUser user = appUserRepository.findByEmail(request.getEmail())
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+                .orElseThrow(()-> new ResourceNotFoundException("User not found"));
 
         // Check password
         if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalStateException("Incorrect password");
+            throw new BusinessException("Incorrect password");
         }
 
         // Check if User enable or verified
         if(!user.isEnabled() || !user.isVerified()){
-            throw new IllegalStateException("Email not confirmed. Please confirm your email.");
+            throw new BusinessException("Email not confirmed. Please confirm your email.");
         }
 
         // Generate JWT token & Refresh Token
@@ -145,7 +148,7 @@ public class AuthService {
     public void forgotPassword(String email) {
 
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Generate token
         String token = UUID.randomUUID().toString();
@@ -171,11 +174,11 @@ public class AuthService {
         // Find token
         ConfirmationToken confirmationToken = confirmationTokenService
                 .getToken(token)
-                .orElseThrow(() -> new IllegalStateException("Invalid or expired token"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired token"));
 
         // Check if token not expired
         if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Token expired");
+            throw new InvalidTokenException("Token expired");
         }
 
         // Token = Used
