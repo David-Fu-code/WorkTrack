@@ -1,0 +1,9 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/api/v1/users/me'
+order: 6000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqb2huQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ5MzIyMDYzLCJleHAiOjE3NDk0MDg0NjN9.TxaZ0Olx2IT-lAuxTaICX5gVBsluDpnTEUsqMax0WJw'

@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Created JobApplication'
+method: POST
+url: '{{baseUrl}}/api/v1/applications'
+order: 13000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqb2huQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ5NTc0NjQ5LCJleHAiOjE3NDk2NjEwNDl9.jPqTNwFZ9lXshr29HlvjSFhVELB3k2P_O5N97s81mck'
+body:
+  type: json
+  content: |-
+    {
+        "companyName": "Botas",
+        "position": "Backend Developer",
+        "status": "APPLIED",
+        "appliedDate": "2025-06-08",
+        "notes": "Referred by a friend"
+    }

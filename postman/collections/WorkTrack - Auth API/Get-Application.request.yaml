@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Application'
+method: GET
+url: ''
+order: 14000

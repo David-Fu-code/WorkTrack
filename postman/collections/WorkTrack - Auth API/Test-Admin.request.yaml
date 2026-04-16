@@ -1,0 +1,9 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/api/v1/admin/test'
+order: 9000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqb2huQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ5MzIyNDA1LCJleHAiOjE3NDk0MDg4MDV9.e8SM4vQG1k-l4rAydYwE9qFYyUojSFsYs1nh4Q6ckyA'

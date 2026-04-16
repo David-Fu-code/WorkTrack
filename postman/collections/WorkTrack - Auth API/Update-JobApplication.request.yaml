@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Update JobApplication'
+method: PUT
+url: '{{baseUrl}}/api/v1/applications/7'
+order: 15000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBbGljaWFAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDk1NzQ3NjcsImV4cCI6MTc0OTY2MTE2N30.5Px0dCk7P3inWs_SMktrr7Ow1nVIpXEQPCch9VP0Qkc'
+body:
+  type: json
+  content: |-
+    {
+      "companyName": "Google",
+      "position": "Backend Developer",
+      "status": "INTERVIEW",
+      "appliedDate": "2025-06-08",
+      "notes": "They sent me a HackerRank test"
+    }

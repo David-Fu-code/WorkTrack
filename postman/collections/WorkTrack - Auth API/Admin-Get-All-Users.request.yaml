@@ -1,0 +1,9 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/api/v1/admin/users'
+order: 10000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0OTMyMjQ4MSwiZXhwIjoxNzQ5NDA4ODgxfQ.62I8f5U74KPqgDYY37Ftil1bErGFK_sPmKpYCrvTDL8'

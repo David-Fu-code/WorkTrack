@@ -1,0 +1,10 @@
+$kind: http-request
+name: 'Delete JobApplication'
+method: DELETE
+url: '{{baseUrl}}/api/v1/applications/7'
+order: 16000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBbGljaWFAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDk1NzQ4ODQsImV4cCI6MTc0OTY2MTI4NH0.gpdtn5y79oQau8A8p4jiTcygZEB_5DLMu97HNsC47LY'
