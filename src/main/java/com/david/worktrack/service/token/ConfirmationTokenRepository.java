@@ -16,4 +16,14 @@ public interface ConfirmationTokenRepository extends JpaRepository<ConfirmationT
 
     Optional<ConfirmationToken> findByToken(String token);
 
+    // Automatically marks a token as confirmed ONLY if it has not been confirmed yet
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE ConfirmationToken c
+        SET c.confirmedAt = :now
+        WHERE c.token = :token AND c.confirmedAt IS NULL
+    """)
+    int confirmToken(@Param("token") String token,
+                     @Param("now") LocalDateTime now);
 }

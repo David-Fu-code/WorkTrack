@@ -4,7 +4,6 @@ import com.david.worktrack.entity.AppUser;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -21,7 +20,7 @@ public class PasswordResetToken {
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "user_id")
-    private AppUser user;
+    private AppUser appUser;
 
     private LocalDateTime expiryDate;
 

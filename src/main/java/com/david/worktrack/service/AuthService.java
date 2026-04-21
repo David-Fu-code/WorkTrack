@@ -8,7 +8,6 @@ import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.entity.AppUserRole;
 import com.david.worktrack.exception.BusinessException;
 import com.david.worktrack.exception.InvalidTokenException;
-import com.david.worktrack.exception.ResourceNotFoundException;
 import com.david.worktrack.refreshToken.RefreshToken;
 import com.david.worktrack.refreshToken.RefreshTokenService;
 import com.david.worktrack.repository.AppUserRepository;
@@ -29,12 +28,12 @@ public class AuthService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AppUserRepository appUserRepository;
     private final JwtService jwtService;
-    private final ConfirmationTokenService tokenService;
+    private final ConfirmationTokenService confirmationTokenService;
     private final RefreshTokenService refreshTokenService;
     private final EmailServiceImp emailService;
     private final TokenService customTokenService;
     /**
-     * Registers a new user.
+     * Registers a new appUser.
      * Protects from creating multiple users by checking if email already exists.
      */
     public String register(RegisterRequest request) {
@@ -43,8 +42,8 @@ public class AuthService {
         if (appUserRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalStateException("Email already registered");
         }
-        // Build new user
-        AppUser user = AppUser.builder()
+        // Build new appUser
+        AppUser appUser = AppUser.builder()
                 .email(request.getEmail()) // Sets email
                 .password(bCryptPasswordEncoder.encode(request.getPassword())) // Encodes password
                 .appUserRole(AppUserRole.USER) // Sets role to USER (default role)
@@ -54,19 +53,19 @@ public class AuthService {
                 .verified(false) // Needs email confirm
                 .build();
 
-        // Save user
-        appUserRepository.save(user);
+        // Save appUser
+        appUserRepository.save(appUser);
 
-        ConfirmationToken token = customTokenService.createToken(user);
-        tokenService.saveConfirmationToken(token);
+        ConfirmationToken token = customTokenService.createToken(appUser);
+        confirmationTokenService.saveConfirmationToken(token);
 
         // Confirmation link
         String link = "http://localhost:3000/confirm?token=" + token.getToken();
 
         // Send Email
         emailService.sendConfirmationEmail(
-                user.getEmail(),
-                user.getDisplayName(),
+                appUser.getEmail(),
+                appUser.getDisplayName(),
                 link
         );
 
@@ -76,7 +75,7 @@ public class AuthService {
     @Transactional
     public String confirmToken(String token) {
 
-        ConfirmationResult result = tokenService.setConfirmedAt(token);
+        ConfirmationResult result = confirmationTokenService.markAsUsed(token);
 
         if (result.firstTime()) {
             appUserService.enableAppUser(result.user().getEmail());
@@ -87,24 +86,24 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
 
-        AppUser user = appUserRepository.findByEmail(request.getEmail())
-                .orElseThrow(()-> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(request.getEmail());
 
-        if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!bCryptPasswordEncoder.matches(request.getPassword(), appUser.getPassword())) {
             throw new BusinessException("Incorrect password");
         }
 
-        if(!user.isEnabled() || !user.isVerified()){
+        if(!appUser.isEnabled() || !appUser.isVerified()){
             throw new BusinessException("Email not confirmed. Please confirm your email.");
         }
 
         // Generate JWT token & Refresh Token
-        String accessToken  = jwtService.generateToken(user.getEmail());
-        String refreshToken = refreshTokenService.createRefreshToken(user);
+        String accessToken  = jwtService.generateToken(appUser.getEmail());
+        String refreshToken = refreshTokenService.createRefreshToken(appUser);
         return new AuthResponse(accessToken, refreshToken);
     }
 
     public AuthResponse refreshToken(String refreshTokenValue) {
+
         RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
 
         String newAccessToken = jwtService.generateToken(refreshToken.getAppUser().getEmail());
@@ -114,41 +113,39 @@ public class AuthService {
 
     public void forgotPassword(String email) {
 
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
         // Create reset token
-        ConfirmationToken token = customTokenService.createToken(user);
-        tokenService.saveConfirmationToken(token);
+        ConfirmationToken token = customTokenService.createToken(appUser);
+        confirmationTokenService.saveConfirmationToken(token);
 
         String link = "http://localhost:8080/api/v1/auth/reset-password?token=" + token.getToken();
 
         // Send RESET password email
         emailService.sendResetPasswordEmail(
-                user.getEmail(),
-                user.getDisplayName(),
+                appUser.getEmail(),
+                appUser.getDisplayName(),
                 link
         );
     }
 
     @Transactional
-    public void resetPassword(String token, String newPassword) {
+    public void resetPassword(String resetPasswordToken, String newPassword) {
 
-        ConfirmationToken confirmationToken = tokenService.getToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Invalid or expired token"));
+        ConfirmationToken confirmationToken = confirmationTokenService.getTokenOrThrow(resetPasswordToken);
 
         // Check expiration
         if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException("Token expired");
         }
 
-        // Mark token as used
-        tokenService.setConfirmedAt(token);
+        // Mark resetPasswordToken as used
+        confirmationTokenService.markAsUsed(resetPasswordToken);
 
         // Update password
-        AppUser user = confirmationToken.getUser();
-        user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+        AppUser appUser = confirmationToken.getAppUser();
+        appUser.setPassword(bCryptPasswordEncoder.encode(newPassword));
 
-        appUserRepository.save(user);
+        appUserRepository.save(appUser);
     }
 }

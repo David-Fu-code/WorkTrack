@@ -17,16 +17,24 @@ public class AppUserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-      return appUserRepository.findByEmail(email)
-              .orElseThrow(() -> new ResourceNotFoundException("User Not Found: " + email));
+
+        // Called automatically by Spring Security during authentication (login process)
+        return appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        // If found, the user is returned as UserDetails for authentication
     }
 
     public void enableAppUser(String email) {
-        AppUser appUser = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User Not Found: " + email));
+        AppUser appUser = getUserByEmailOrThrow(email);
 
         appUser.setEnabled(true);
         appUser.setVerified(true);
         appUserRepository.save(appUser);
+    }
+
+    public AppUser getUserByEmailOrThrow(String email) {
+        return appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
 }

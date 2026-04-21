@@ -5,15 +5,12 @@ import com.david.worktrack.dto.JobApplicationResponse;
 import com.david.worktrack.dto.UpdateJobStatusRequest;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.entity.JobApplication;
-import com.david.worktrack.exception.BusinessException;
 import com.david.worktrack.exception.ResourceNotFoundException;
-import com.david.worktrack.repository.AppUserRepository;
 import com.david.worktrack.repository.JobApplicationRepository;
+import com.david.worktrack.service.AppUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,16 +21,14 @@ import java.util.List;
 public class JobApplicationController {
 
     private final JobApplicationRepository jobApplicationRepository;
-    private final AppUserRepository appUserRepository;
-    private final DefaultAuthenticationEventPublisher authenticationEventPublisher;
+    private final AppUserService appUserService;
 
     // Create job application
     @PostMapping
     public ResponseEntity<String> createJobApplication(@RequestBody JobApplicationRequest request, Authentication authentication) {
 
         String email = authentication.getName();
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() ->  new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
         JobApplication application = JobApplication.builder()
                 .companyName(request.getCompanyName())
@@ -41,7 +36,7 @@ public class JobApplicationController {
                 .status(request.getStatus())
                 .appliedDate(request.getAppliedDate())
                 .notes(request.getNotes())
-                .appUser(user)
+                .appUser(appUser)
                 .build();
 
         jobApplicationRepository.save(application);
@@ -54,10 +49,9 @@ public class JobApplicationController {
     public ResponseEntity<List<JobApplicationResponse>> getUserJobApplications(Authentication authentication) {
 
         String email = authentication.getName();
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
-        List<JobApplication> applications = jobApplicationRepository.findByAppUser(user);
+        List<JobApplication> applications = jobApplicationRepository.findByAppUser(appUser);
 
         List<JobApplicationResponse> response = applications.stream()
                 .map(app -> new JobApplicationResponse(
@@ -76,14 +70,13 @@ public class JobApplicationController {
     public ResponseEntity<String> updateJobApplication(@PathVariable("id") Long id, @RequestBody JobApplicationRequest request, Authentication authentication) {
 
         String email = authentication.getName();
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
         JobApplication app = jobApplicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
 
         // Security: allow only owner to update
-        if(!app.getAppUser().getId().equals(user.getId())) {
+        if(!app.getAppUser().getId().equals(appUser.getId())) {
             return ResponseEntity.status(403).body("You can only update your own applications");
         }
 
@@ -103,14 +96,13 @@ public class JobApplicationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteJobApplication(@PathVariable Long id, Authentication authentication) {
         String email = authentication.getName();
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
         JobApplication app = jobApplicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
 
         // Only the owner can delete it
-        if (!app.getAppUser().getId().equals(user.getId())){
+        if (!app.getAppUser().getId().equals(appUser.getId())){
             return ResponseEntity.status(403).body("You can only delete your own applications");
         }
 
@@ -119,30 +111,29 @@ public class JobApplicationController {
         return ResponseEntity.ok("Job Application deleted");
     }
 
-@PatchMapping("/{id}") // Change Status
-public ResponseEntity<String> updateJobStatus(
-        @PathVariable Long id,
-        @RequestBody UpdateJobStatusRequest request,
-        Authentication authentication) {
+    @PatchMapping("/{id}") // Change Status
+    public ResponseEntity<String> updateJobStatus(
+            @PathVariable Long id,
+            @RequestBody UpdateJobStatusRequest request,
+            Authentication authentication) {
 
-    String email = authentication.getName();
-    AppUser user = appUserRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String email = authentication.getName();
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
-    JobApplication app = jobApplicationRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
+        JobApplication app = jobApplicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
 
-    // Check ownership
-    if (!app.getAppUser().getId().equals(user.getId())) {
-        return ResponseEntity.status(403).body("You can only update your own applications");
+        // Check ownership
+        if (!app.getAppUser().getId().equals(appUser.getId())) {
+            return ResponseEntity.status(403).body("You can only update your own applications");
+        }
+
+        // ✅ Update status only
+        app.setStatus(request.getStatus());
+        jobApplicationRepository.save(app);
+
+        return ResponseEntity.ok("Status updated");
     }
-
-    // ✅ Update status only
-    app.setStatus(request.getStatus());
-    jobApplicationRepository.save(app);
-
-    return ResponseEntity.ok("Status updated");
-}
 
 
 }

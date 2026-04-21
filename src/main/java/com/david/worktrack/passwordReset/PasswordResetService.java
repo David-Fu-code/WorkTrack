@@ -3,8 +3,10 @@ package com.david.worktrack.passwordReset;
 import com.david.worktrack.email.EmailSender;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.exception.InvalidTokenException;
-import com.david.worktrack.exception.ResourceNotFoundException;
 import com.david.worktrack.repository.AppUserRepository;
+import com.david.worktrack.service.AppUserService;
+import com.david.worktrack.service.EmailServiceImp;
+import com.david.worktrack.service.token.ConfirmationToken;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,14 +20,14 @@ import java.util.UUID;
 @Transactional
 public class PasswordResetService {
 
-    private final PasswordResetTokenRepository tokenRepository;
+    private final PasswordResetTokenRepository resetTokenRepository;
     private final AppUserRepository appUserRepository;
-    private final EmailSender emailSender;
+    private final EmailServiceImp emailServiceImp;
+    private final AppUserService appUserService;
 
     public void createdPasswordResetToken(String email) {
 
-        AppUser appUser = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
         // Generate token
         String token = UUID.randomUUID().toString();
@@ -33,21 +35,21 @@ public class PasswordResetService {
         // Save token
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setToken(token);
-        resetToken.setUser(appUser);
+        resetToken.setAppUser(appUser);
         resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
         resetToken.setUsed(false);
-        tokenRepository.save(resetToken);
+        resetTokenRepository.save(resetToken);
 
         // Build link
-        String link = "http://localhost:8080/api/v1/auth/confirm?token=" + token;
+        String link = "http://localhost:8080/api/v1/auth/reset-password?token=" + token;
 
         // Send email
-        emailSender.send(appUser.getEmail(), buildEmail(link));
+        emailServiceImp.sendResetPasswordEmail(email, appUser.getDisplayName(), link);
     }
 
     public void resetPassword(String token, String newPassword) {
-        PasswordResetToken resetToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Invalid token"));
+
+        PasswordResetToken resetToken = getResetTokenOrThrow(token);
 
         if (resetToken.isUsed()){
             throw new IllegalStateException("Token already used");
@@ -57,15 +59,17 @@ public class PasswordResetService {
             throw new IllegalStateException("Expired token");
         }
 
-        AppUser appuser = resetToken.getUser();
-        appuser.setPassword(new BCryptPasswordEncoder().encode(newPassword));
-        appUserRepository.save(appuser);
+        AppUser appUser = resetToken.getAppUser();
+        appUser.setPassword(new BCryptPasswordEncoder().encode(newPassword));
+        appUserRepository.save(appUser);
 
         resetToken.setUsed(true);
-        tokenRepository.save(resetToken);
+        resetTokenRepository.save(resetToken);
     }
 
-    private String buildEmail(String link) {
-        return "Click the following link to reset your password: " + link;
+    public PasswordResetToken getResetTokenOrThrow(String token) {
+
+        return resetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid token"));
     }
 }

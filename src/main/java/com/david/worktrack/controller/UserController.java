@@ -4,6 +4,7 @@ import com.david.worktrack.dto.*;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.exception.ResourceNotFoundException;
 import com.david.worktrack.repository.AppUserRepository;
+import com.david.worktrack.service.AppUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,25 +20,24 @@ public class UserController {
 
     private final AppUserRepository appUserRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final AppUserService appUserService;
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
         String email = authentication.getName();
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
-        UserResponse response = new UserResponse(user.getId(), user.getEmail(), user.getDisplayName(), user.getAppUserRole());
+        UserResponse response = new UserResponse(appUser.getId(), appUser.getEmail(), appUser.getDisplayName(), appUser.getAppUserRole());
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/me")
     public ResponseEntity<String> updateProfile(@RequestBody UpdateProfileRequest request, Authentication authentication){
         String email = authentication.getName();
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
-        user.setDisplayName(request.getName());
-        appUserRepository.save(user);
+        appUser.setDisplayName(request.getName());
+        appUserRepository.save(appUser);
 
         return ResponseEntity.ok("User updated successfully");
     }
@@ -45,15 +45,14 @@ public class UserController {
     @PutMapping("/me/password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication){
         String email = authentication.getName();
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
-        if (!bCryptPasswordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+        if (!bCryptPasswordEncoder.matches(request.getCurrentPassword(), appUser.getPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Current password is incorrect");
         }
 
-        user.setPassword(bCryptPasswordEncoder.encode(request.getNewPassword()));
-        appUserRepository.save(user);
+        appUser.setPassword(bCryptPasswordEncoder.encode(request.getNewPassword()));
+        appUserRepository.save(appUser);
 
         return ResponseEntity.ok("Password changed successfully");
     }

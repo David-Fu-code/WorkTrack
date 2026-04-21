@@ -10,12 +10,12 @@ import java.util.UUID;
 @Service
 public class TokenService {
 
-    public ConfirmationToken createToken(AppUser user) {
+    public ConfirmationToken createToken(AppUser appUser) {
         return ConfirmationToken.builder()
                 .token(UUID.randomUUID().toString())
                 .createdAt(LocalDateTime.now())
                 .expiresAt(LocalDateTime.now().plusMinutes(15))
-                .user(user)
+                .appUser(appUser)
                 .build();
 
     }

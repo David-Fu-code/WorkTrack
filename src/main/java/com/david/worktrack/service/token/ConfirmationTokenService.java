@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -19,34 +18,34 @@ public class ConfirmationTokenService {
         confirmationTokenRepository.save(token);
     }
 
-    public Optional<ConfirmationToken> getToken(String token) {
-        return confirmationTokenRepository.findByToken(token);
+    public ConfirmationToken getTokenOrThrow(String token) {
+        return confirmationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid token"));
     }
 
     // New method
     @Transactional
-    public ConfirmationResult setConfirmedAt(String token) {
+    public ConfirmationResult markAsUsed(String token) {
 
-        ConfirmationToken confirmationToken = confirmationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Invalid token"));
+        ConfirmationToken confirmationToken = getTokenOrThrow(token);
 
         if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException("Token expired");
         }
 
-        if (confirmationToken.getConfirmedAt() != null) {
+        int updated = confirmationTokenRepository.confirmToken(token, LocalDateTime.now());
+
+        if (updated == 0) {
             return new ConfirmationResult(
                     "Email already confirmed!",
-                    confirmationToken.getUser(),
+                    confirmationToken.getAppUser(),
                     false
             );
         }
 
-        confirmationToken.setConfirmedAt(LocalDateTime.now());
-
         return new ConfirmationResult(
                 "Email confirmed successfully",
-                confirmationToken.getUser(),
+                confirmationToken.getAppUser(),
                 true
         );
     }

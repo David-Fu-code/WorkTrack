@@ -16,10 +16,10 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     // New Refresh Token to keep log in for 7 days
-    public String createRefreshToken(AppUser user) {
+    public String createRefreshToken(AppUser appUser) {
         String token = UUID.randomUUID().toString();
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setAppUser(user);
+        refreshToken.setAppUser(appUser);
         refreshToken.setToken(token);
         refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
         refreshToken.setUsed(false);
@@ -28,9 +28,8 @@ public class RefreshTokenService {
     }
 
     // Check Refresh Token
-    public RefreshToken validateRefreshToken(String tokenValue) {
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(tokenValue)
-                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+    public RefreshToken validateRefreshToken(String refreshTokenValue) {
+        RefreshToken refreshToken = getRefreshTokenOrThrow(refreshTokenValue);
 
         if (refreshToken.isUsed()) {
             throw new InvalidTokenException("Refresh token already used");
@@ -43,11 +42,15 @@ public class RefreshTokenService {
 
     // Log Out Invalidate Refresh Token
     @Transactional
-    public void invalidateRefreshToken(String tokenValue) {
-        RefreshToken token = refreshTokenRepository.findByToken(tokenValue)
-                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+    public void invalidateRefreshToken(String refreshTokenValue) {
+        RefreshToken refreshToken = getRefreshTokenOrThrow(refreshTokenValue);
 
-        token.setUsed(true);
-        refreshTokenRepository.save(token);
+        refreshToken.setUsed(true);
+        refreshTokenRepository.save(refreshToken);
+    }
+
+    public RefreshToken getRefreshTokenOrThrow(String refreshTokenValue) {
+        return refreshTokenRepository.findByToken(refreshTokenValue)
+                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
     }
 }
