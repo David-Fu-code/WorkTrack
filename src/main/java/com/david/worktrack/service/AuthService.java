@@ -1,9 +1,9 @@
 package com.david.worktrack.service;
 
 import com.david.worktrack.dto.AuthResponse;
+import com.david.worktrack.dto.ConfirmationResult;
 import com.david.worktrack.dto.LoginRequest;
 import com.david.worktrack.dto.RegisterRequest;
-import com.david.worktrack.email.EmailSender;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.entity.AppUserRole;
 import com.david.worktrack.exception.BusinessException;
@@ -16,12 +16,10 @@ import com.david.worktrack.service.token.ConfirmationToken;
 import com.david.worktrack.service.token.ConfirmationTokenService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +28,11 @@ public class AuthService {
     private final AppUserService appUserService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AppUserRepository appUserRepository;
-    private final ConfirmationTokenService confirmationTokenService;
     private final JwtService jwtService;
-    private final EmailSender emailSender;
+    private final ConfirmationTokenService tokenService;
     private final RefreshTokenService refreshTokenService;
-    private AuthResponse authResponse;
-
+    private final EmailServiceImp emailService;
+    private final TokenService customTokenService;
     /**
      * Registers a new user.
      * Protects from creating multiple users by checking if email already exists.
@@ -47,7 +44,7 @@ public class AuthService {
             throw new IllegalStateException("Email already registered");
         }
         // Build new user
-        AppUser appUser = AppUser.builder()
+        AppUser user = AppUser.builder()
                 .email(request.getEmail()) // Sets email
                 .password(bCryptPasswordEncoder.encode(request.getPassword())) // Encodes password
                 .appUserRole(AppUserRole.USER) // Sets role to USER (default role)
@@ -58,67 +55,45 @@ public class AuthService {
                 .build();
 
         // Save user
-        appUserRepository.save(appUser);
+        appUserRepository.save(user);
 
-        // Create ConfirmationToken
-        String token = UUID.randomUUID().toString();
-
-        ConfirmationToken confirmationToken = ConfirmationToken.builder()
-                .token(token)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(15))
-                .appUser(appUser)
-                .build();
-
-        // Save token
-        confirmationTokenService.saveConfirmationToken(confirmationToken);
+        ConfirmationToken token = customTokenService.createToken(user);
+        tokenService.saveConfirmationToken(token);
 
         // Confirmation link
-        String link = "http://localhost:3000/confirm?token=" + token;
+        String link = "http://localhost:3000/confirm?token=" + token.getToken();
 
         // Send Email
-        emailSender.send(request.getEmail(), buildEmail(request.getEmail(), link));
+        emailService.sendConfirmationEmail(
+                user.getEmail(),
+                user.getDisplayName(),
+                link
+        );
 
-        return "User registered. Please chek your email to confirm";
+        return "User registered. Please check your email to confirm your account";
     }
 
     @Transactional
     public String confirmToken(String token) {
 
-        // Find token
-        ConfirmationToken confirmationToken = confirmationTokenService
-                .getToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
+        ConfirmationResult result = tokenService.setConfirmedAt(token);
 
-        // Check confirmed
-        if(confirmationToken.getConfirmedAt() != null) {
-            throw new BusinessException("Email already confirmed");
+        if (result.firstTime()) {
+            appUserService.enableAppUser(result.user().getEmail());
         }
 
-        // Check if token expired
-        if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new InvalidTokenException("Token expired");
-        }
-
-        // Token confirmed
-        confirmationTokenService.setConfirmedAt(token);
-        // Enable User
-        appUserService.enableAppUser(confirmationToken.getAppUser().getEmail());
-        return "Confirmed";
-
+        return result.message();
     }
 
     public AuthResponse login(LoginRequest request) {
-        // Load User
+
         AppUser user = appUserRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new ResourceNotFoundException("User not found"));
 
-        // Check password
         if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BusinessException("Incorrect password");
         }
 
-        // Check if User enable or verified
         if(!user.isEnabled() || !user.isVerified()){
             throw new BusinessException("Email not confirmed. Please confirm your email.");
         }
@@ -127,14 +102,6 @@ public class AuthService {
         String accessToken  = jwtService.generateToken(user.getEmail());
         String refreshToken = refreshTokenService.createRefreshToken(user);
         return new AuthResponse(accessToken, refreshToken);
-    }
-
-    private String buildEmail(String name, String link) {
-        return "<p>Hello " + name + ",</p>"
-                + "<p>Thank you for registering. Please click on the below link to activate your account:</p>"
-                + "<a href=\"" + link + "\">Confirm Account</a>"
-                + "<p>The link will expire in 15 minutes.</p>"
-                + "<p>See you soon!</p>";
     }
 
     public AuthResponse refreshToken(String refreshTokenValue) {
@@ -150,54 +117,38 @@ public class AuthService {
         AppUser user = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Generate token
-        String token = UUID.randomUUID().toString();
+        // Create reset token
+        ConfirmationToken token = customTokenService.createToken(user);
+        tokenService.saveConfirmationToken(token);
 
-        // Save token en la tabla de confirmation tokens (puedes usar la misma tabla que confirm email)
-        ConfirmationToken confirmationToken = ConfirmationToken.builder()
-                .token(token)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(15))
-                .appUser(user)
-                .build();
+        String link = "http://localhost:8080/api/v1/auth/reset-password?token=" + token.getToken();
 
-        confirmationTokenService.saveConfirmationToken(confirmationToken);
-
-        String link = "http://localhost:8080/api/v1/auth/reset-password?token=" + token;
-
-
-        emailSender.send(email, buildForgotPasswordEmail(email, link));
+        // Send RESET password email
+        emailService.sendResetPasswordEmail(
+                user.getEmail(),
+                user.getDisplayName(),
+                link
+        );
     }
 
     @Transactional
     public void resetPassword(String token, String newPassword) {
-        // Find token
-        ConfirmationToken confirmationToken = confirmationTokenService
-                .getToken(token)
+
+        ConfirmationToken confirmationToken = tokenService.getToken(token)
                 .orElseThrow(() -> new InvalidTokenException("Invalid or expired token"));
 
-        // Check if token not expired
+        // Check expiration
         if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException("Token expired");
         }
 
-        // Token = Used
-        confirmationTokenService.setConfirmedAt(token);
+        // Mark token as used
+        tokenService.setConfirmedAt(token);
 
         // Update password
-        AppUser user = confirmationToken.getAppUser();
+        AppUser user = confirmationToken.getUser();
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
 
         appUserRepository.save(user);
     }
-
-    private String buildForgotPasswordEmail(String name, String link) {
-        return "<p>Hello " + name + ",</p>"
-                + "<p>You requested to reset your password. Please click on the link below to reset it:</p>"
-                + "<a href=\"" + link + "\">" + link + "</a>"  // Show full link
-                + "<p>This link will expire in 15 minutes.</p>"
-                + "<p>If you did not request this, you can ignore this email.</p>";
-    }
-
-
 }

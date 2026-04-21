@@ -1,10 +1,10 @@
 package com.david.worktrack.service.token;
 
+import com.david.worktrack.dto.ConfirmationResult;
 import com.david.worktrack.exception.InvalidTokenException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
-import com.david.worktrack.entity.AppUser;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -26,26 +26,28 @@ public class ConfirmationTokenService {
     // New method
     @Transactional
     public ConfirmationResult setConfirmedAt(String token) {
+
         ConfirmationToken confirmationToken = confirmationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("❌ Invalid or expired confirmation token"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid token"));
 
-        String message;
-        boolean firstTime = false;
-
-        if (confirmationToken.getConfirmedAt() != null) {
-            message = "✅ Email already confirmed!";
-        } else if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new InvalidTokenException("❌ Invalid or expired confirmation token");
-        } else {
-            confirmationToken.setConfirmedAt(LocalDateTime.now());
-            confirmationTokenRepository.save(confirmationToken);
-            message = "✅ Email confirmed successfully!";
-            firstTime = true;
+        if (confirmationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvalidTokenException("Token expired");
         }
 
-        return new ConfirmationResult(message, confirmationToken.getAppUser(), firstTime);
-    }
+        if (confirmationToken.getConfirmedAt() != null) {
+            return new ConfirmationResult(
+                    "Email already confirmed!",
+                    confirmationToken.getUser(),
+                    false
+            );
+        }
 
-    // DTO simple to return message + user
-    public static record ConfirmationResult(String message, AppUser user, boolean firstTime) {}
+        confirmationToken.setConfirmedAt(LocalDateTime.now());
+
+        return new ConfirmationResult(
+                "Email confirmed successfully",
+                confirmationToken.getUser(),
+                true
+        );
+    }
 }

@@ -30,8 +30,10 @@ public class AuthController {
 
     @GetMapping("/confirm")
     public ResponseEntity<String> confirm(@RequestParam("token") String token){
+        System.out.println("CONFIRM ENDPOINT HIT - token: " + token);
         String result = authService.confirmToken(token);
         return ResponseEntity.ok(result);
+
 
     }
 
