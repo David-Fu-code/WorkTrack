@@ -1,12 +1,16 @@
 package com.david.worktrack.service.token;
 
 import com.david.worktrack.dto.ConfirmationResult;
+import com.david.worktrack.entity.AppUser;
+import com.david.worktrack.exception.BusinessException;
 import com.david.worktrack.exception.InvalidTokenException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.rmi.ConnectIOException;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -14,18 +18,28 @@ public class ConfirmationTokenService {
 
     private final ConfirmationTokenRepository confirmationTokenRepository;
 
-    public void saveConfirmationToken(ConfirmationToken token) {
-        confirmationTokenRepository.save(token);
-    }
-
     public ConfirmationToken getTokenOrThrow(String token) {
+
         return confirmationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new InvalidTokenException("Invalid token"));
     }
 
-    // New method
     @Transactional
-    public ConfirmationResult markAsUsed(String token) {
+    public AppUser markAsUsed(String token) {
+
+        ConfirmationToken confirmationToken = validateToken(token);
+
+        int updated = confirmationTokenRepository.confirmToken(token, LocalDateTime.now());
+
+        if (updated == 0) {
+            throw new BusinessException("Email already confirmed");
+        }
+
+        return confirmationToken.getAppUser();
+
+    }
+
+    public ConfirmationToken validateToken(String token) {
 
         ConfirmationToken confirmationToken = getTokenOrThrow(token);
 
@@ -33,20 +47,20 @@ public class ConfirmationTokenService {
             throw new InvalidTokenException("Token expired");
         }
 
-        int updated = confirmationTokenRepository.confirmToken(token, LocalDateTime.now());
+        return confirmationToken;
+    }
 
-        if (updated == 0) {
-            return new ConfirmationResult(
-                    "Email already confirmed!",
-                    confirmationToken.getAppUser(),
-                    false
-            );
-        }
+    public ConfirmationToken createAndSaveToken(AppUser appUser) {
 
-        return new ConfirmationResult(
-                "Email confirmed successfully",
-                confirmationToken.getAppUser(),
-                true
-        );
+        LocalDateTime now = LocalDateTime.now();
+
+        ConfirmationToken confirmationToken = ConfirmationToken.builder()
+                .token(UUID.randomUUID().toString())
+                .createdAt(now)
+                .expiresAt(now.plusMinutes(15))
+                .appUser(appUser)
+                .build();
+
+        return confirmationTokenRepository.save(confirmationToken);
     }
 }

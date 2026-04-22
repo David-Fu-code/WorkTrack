@@ -18,7 +18,6 @@ public class EmailServiceImp {
         emailSender.send(email, buildResetPasswordEmail(name, link));
     }
 
-
     private String buildConfirmationEmail(String name, String link) {
         return "<p>Hello " + name + ",</p>"
                 + "<p>Thank you for registering. Please click on the below link to activate your account:</p>"

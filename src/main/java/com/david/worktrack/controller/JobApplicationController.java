@@ -94,7 +94,7 @@ public class JobApplicationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteJobApplication(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<String> deleteJobApplication(@PathVariable("id") Long id, Authentication authentication) {
         String email = authentication.getName();
         AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 

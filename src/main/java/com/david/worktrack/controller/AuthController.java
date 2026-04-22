@@ -30,11 +30,9 @@ public class AuthController {
 
     @GetMapping("/confirm")
     public ResponseEntity<String> confirm(@RequestParam("token") String token){
-        System.out.println("CONFIRM ENDPOINT HIT - token: " + token);
+        //System.out.println("CONFIRM ENDPOINT HIT - token: " + token);
         String result = authService.confirmToken(token);
         return ResponseEntity.ok(result);
-
-
     }
 
     @GetMapping("/test-protected")
@@ -57,7 +55,7 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request.getEmail());
-        return ResponseEntity.ok("Password reset email sent");
+        return ResponseEntity.ok("If the email exists, you will receive a password reset link");
     }
 
     @PostMapping("/reset-password")

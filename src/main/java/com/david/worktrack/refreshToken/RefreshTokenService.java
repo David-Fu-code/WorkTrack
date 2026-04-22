@@ -17,6 +17,7 @@ public class RefreshTokenService {
 
     // New Refresh Token to keep log in for 7 days
     public String createRefreshToken(AppUser appUser) {
+
         String token = UUID.randomUUID().toString();
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setAppUser(appUser);
@@ -28,16 +29,21 @@ public class RefreshTokenService {
     }
 
     // Check Refresh Token
-    public RefreshToken validateRefreshToken(String refreshTokenValue) {
+    public AppUser validateRefreshToken(String refreshTokenValue) {
+
         RefreshToken refreshToken = getRefreshTokenOrThrow(refreshTokenValue);
 
         if (refreshToken.isUsed()) {
             throw new InvalidTokenException("Refresh token already used");
         }
-        if(refreshToken.getExpiryDate().isBefore(LocalDateTime.now())){
+
+        if (refreshToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException("Expired refresh token");
         }
-        return refreshToken;
+
+        revokeToken(refreshToken);
+
+        return refreshToken.getAppUser();
     }
 
     // Log Out Invalidate Refresh Token
@@ -52,5 +58,11 @@ public class RefreshTokenService {
     public RefreshToken getRefreshTokenOrThrow(String refreshTokenValue) {
         return refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+    }
+
+    public void revokeToken(RefreshToken token) {
+
+        token.setUsed(true);
+        refreshTokenRepository.save(token);
     }
 }

@@ -30,3 +30,7 @@ server:
 jwt:
   secret: your-256-bit-secret-your-256-bit-secret-your-256-bit-secret
   expiration: 900000 # 15 min in milliseconds
+
+app:
+  frontend.url: http://localhost:3000
+  backend.url: http://localhost:8080
