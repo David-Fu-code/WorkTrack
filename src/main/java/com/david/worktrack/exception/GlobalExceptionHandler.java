@@ -40,9 +40,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(AccessDeniedException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
         return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
+                HttpStatus.FORBIDDEN,
                 ex.getMessage(),
                 request.getRequestURI()
         );

@@ -2,15 +2,11 @@ package com.david.worktrack.controller;
 
 import com.david.worktrack.dto.*;
 import com.david.worktrack.entity.AppUser;
-import com.david.worktrack.exception.ResourceNotFoundException;
-import com.david.worktrack.repository.AppUserRepository;
-import com.david.worktrack.service.AppUserService;
+import com.david.worktrack.service.AuthService;
+import com.david.worktrack.service.token.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,42 +14,36 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final AppUserRepository appUserRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final AppUserService appUserService;
+    private final UserService userService;
+    private final AuthService authService;
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
-        String email = authentication.getName();
-        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
+    public ResponseEntity<UserResponse> getUser(Authentication authentication) {
 
-        UserResponse response = new UserResponse(appUser.getId(), appUser.getEmail(), appUser.getDisplayName(), appUser.getAppUserRole());
+        AppUser appUser = authService.getCurrentUser(authentication);
+
+        UserResponse response = userService.getUser(appUser);
+
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/me")
-    public ResponseEntity<String> updateProfile(@RequestBody UpdateProfileRequest request, Authentication authentication){
-        String email = authentication.getName();
-        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
+    public ResponseEntity<Void> updateProfileName(@RequestBody UpdateProfileRequest request, Authentication authentication){
 
-        appUser.setDisplayName(request.getName());
-        appUserRepository.save(appUser);
+        AppUser appUser = authService.getCurrentUser(authentication);
 
-        return ResponseEntity.ok("User updated successfully");
+        userService.updateProfileName(request, appUser);
+
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/me/password")
-    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication){
-        String email = authentication.getName();
-        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
+    public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication){
 
-        if (!bCryptPasswordEncoder.matches(request.getCurrentPassword(), appUser.getPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Current password is incorrect");
-        }
+        AppUser appUser = authService.getCurrentUser(authentication);
 
-        appUser.setPassword(bCryptPasswordEncoder.encode(request.getNewPassword()));
-        appUserRepository.save(appUser);
+        userService.changePassword(request, appUser);
 
-        return ResponseEntity.ok("Password changed successfully");
+        return ResponseEntity.noContent().build();
     }
 }

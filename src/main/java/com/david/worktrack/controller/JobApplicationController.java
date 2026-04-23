@@ -24,7 +24,7 @@ public class JobApplicationController {
 
     // Create job application
     @PostMapping
-    public ResponseEntity<String> createJobApplication(@RequestBody JobApplicationRequest request, Authentication authentication) {
+    public ResponseEntity<Void> createJobApplication(@RequestBody JobApplicationRequest request, Authentication authentication) {
 
         AppUser appUser = authService.getCurrentUser(authentication);
 
@@ -46,11 +46,11 @@ public class JobApplicationController {
 
     // Update Job Application
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateJobApplication(@PathVariable("id") Long id, @RequestBody JobApplicationRequest request, Authentication authentication) {
+    public ResponseEntity<Void> updateJobApplication(@PathVariable("id") Long id, @RequestBody JobApplicationRequest request, Authentication authentication) {
 
         AppUser appUser = authService.getCurrentUser(authentication);
 
-        jobApplicationService.update(id, request, appUser);
+        jobApplicationService.updateJobApplication(id, request, appUser);
 
         return ResponseEntity.ok().build();
 
@@ -58,18 +58,18 @@ public class JobApplicationController {
 
     // Delete Job Application
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteJobApplication(@PathVariable("id") Long id, Authentication authentication) {
+    public ResponseEntity<Void> deleteJobApplication(@PathVariable("id") Long id, Authentication authentication) {
 
         AppUser appUser = authService.getCurrentUser(authentication);
 
-        jobApplicationService.delete(id, appUser);
+        jobApplicationService.deleteJobApplication(id, appUser);
 
         return ResponseEntity.noContent().build();
     }
 
     // Update Job Status
     @PatchMapping("/{id}") // Change Status
-    public ResponseEntity<String> updateJobStatus(@PathVariable Long id, @RequestBody UpdateJobStatusRequest request, Authentication authentication) {
+    public ResponseEntity<Void> updateJobStatus(@PathVariable Long id, @RequestBody UpdateJobStatusRequest request, Authentication authentication) {
 
         AppUser appUser = authService.getCurrentUser(authentication);
 

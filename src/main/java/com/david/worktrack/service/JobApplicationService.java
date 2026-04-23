@@ -49,7 +49,7 @@ public class JobApplicationService {
                 .toList();
     }
 
-    public void update(Long id, JobApplicationRequest request, AppUser appUser) {
+    public void updateJobApplication(Long id, JobApplicationRequest request, AppUser appUser) {
 
         JobApplication app = getUserApplicationOrThrow(id, appUser);
 
@@ -60,7 +60,7 @@ public class JobApplicationService {
         app.setNotes(request.getNotes());
     }
 
-    public void delete(Long id, AppUser appUser) {
+    public void deleteJobApplication(Long id, AppUser appUser) {
 
         JobApplication app = getUserApplicationOrThrow(id, appUser);
 
