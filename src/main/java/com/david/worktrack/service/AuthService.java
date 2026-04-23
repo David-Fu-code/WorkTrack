@@ -6,13 +6,12 @@ import com.david.worktrack.dto.RegisterRequest;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.exception.BusinessException;
 import com.david.worktrack.refreshToken.RefreshTokenService;
-import com.david.worktrack.repository.AppUserRepository;
 import com.david.worktrack.service.token.ConfirmationToken;
 import com.david.worktrack.service.token.ConfirmationTokenService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -131,5 +130,10 @@ public class AuthService {
         if (!appUser.isEnabled()) {
             throw new BusinessException("Email not confirmed. Please confirm your email");
         }
+    }
+
+    public AppUser getCurrentUser(Authentication authentication) {
+
+        return appUserService.getUserByEmailOrThrow(authentication.getName());
     }
 }

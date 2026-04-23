@@ -4,7 +4,6 @@ import com.david.worktrack.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -33,6 +32,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(AccessDeniedException ex, HttpServletRequest request) {
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),

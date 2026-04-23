@@ -1,15 +1,11 @@
 package com.david.worktrack.passwordReset;
-
-import com.david.worktrack.email.EmailSender;
 import com.david.worktrack.entity.AppUser;
 import com.david.worktrack.exception.InvalidTokenException;
-import com.david.worktrack.repository.AppUserRepository;
 import com.david.worktrack.service.AppUserService;
 import com.david.worktrack.service.EmailServiceImp;
-import com.david.worktrack.service.token.ConfirmationToken;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,11 +17,13 @@ import java.util.UUID;
 public class PasswordResetService {
 
     private final PasswordResetTokenRepository resetTokenRepository;
-    private final AppUserRepository appUserRepository;
     private final EmailServiceImp emailServiceImp;
     private final AppUserService appUserService;
 
-    public void createdPasswordResetToken(String email) {
+    @Value("${app.backend.url}")
+    private String backendUrl;
+
+    public void createPasswordResetToken(String email) {
 
         AppUser appUser = appUserService.getUserByEmailOrThrow(email);
 
@@ -40,10 +38,8 @@ public class PasswordResetService {
         resetToken.setUsed(false);
         resetTokenRepository.save(resetToken);
 
-        // Build link
-        String link = "http://localhost:8080/api/v1/auth/reset-password?token=" + token;
+        String link = backendUrl + "/api/v1/auth/reset-password?token=" + token;
 
-        // Send email
         emailServiceImp.sendResetPasswordEmail(email, appUser.getDisplayName(), link);
     }
 
@@ -52,16 +48,15 @@ public class PasswordResetService {
         PasswordResetToken resetToken = getResetTokenOrThrow(token);
 
         if (resetToken.isUsed()){
-            throw new IllegalStateException("Token already used");
+            throw new InvalidTokenException("Token already used");
         }
 
         if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())){
-            throw new IllegalStateException("Expired token");
+            throw new InvalidTokenException("Expired token");
         }
 
         AppUser appUser = resetToken.getAppUser();
-        appUser.setPassword(new BCryptPasswordEncoder().encode(newPassword));
-        appUserRepository.save(appUser);
+        appUserService.updatePassword(appUser, newPassword);
 
         resetToken.setUsed(true);
         resetTokenRepository.save(resetToken);
