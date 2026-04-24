@@ -1,8 +1,6 @@
 package com.david.worktrack.admin;
 
 import com.david.worktrack.user.dto.UserResponse;
-import com.david.worktrack.user.entity.AppUser;
-import com.david.worktrack.user.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,7 +14,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
-    private final AppUserRepository appUserRepository;
+    private final AdminService adminService;
 
     @GetMapping("/test")
     public ResponseEntity<String> adminTest(){
@@ -25,17 +23,7 @@ public class AdminController {
 
     @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getAllUsers(){
-        List<AppUser> users = appUserRepository.findAll();
 
-        List<UserResponse> response = users.stream()
-                .map(user -> new UserResponse(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getDisplayName(),
-                        user.getAppUserRole()
-                ))
-                .toList();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(adminService.getAllUsers());
     }
 }

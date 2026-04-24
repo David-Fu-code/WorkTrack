@@ -1,10 +1,10 @@
 package com.david.worktrack.user.controller;
 
 import com.david.worktrack.user.entity.AppUser;
-import com.david.worktrack.auth.AuthService;
 import com.david.worktrack.user.dto.ChangePasswordRequest;
 import com.david.worktrack.user.dto.UpdateProfileRequest;
 import com.david.worktrack.user.dto.UserResponse;
+import com.david.worktrack.user.service.UserMapper;
 import com.david.worktrack.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,22 +17,19 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    private final AuthService authService;
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getUser(Authentication authentication) {
+    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
-        UserResponse response = userService.getUser(appUser);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(UserMapper.toResponse(appUser));
     }
 
     @PutMapping("/me")
     public ResponseEntity<Void> updateProfileName(@RequestBody UpdateProfileRequest request, Authentication authentication){
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
         userService.updateProfileName(request, appUser);
 
@@ -42,7 +39,7 @@ public class UserController {
     @PutMapping("/me/password")
     public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication){
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
         userService.changePassword(request, appUser);
 

@@ -5,7 +5,7 @@ import com.david.worktrack.job.dto.JobApplicationRequest;
 import com.david.worktrack.job.dto.JobApplicationResponse;
 import com.david.worktrack.job.dto.UpdateJobStatusRequest;
 import com.david.worktrack.user.entity.AppUser;
-import com.david.worktrack.auth.AuthService;
+import com.david.worktrack.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +20,13 @@ import java.util.List;
 public class JobApplicationController {
 
     private final JobApplicationService jobApplicationService;
-    private final AuthService authService;
+    private final UserService userService;
 
     // Create job application
     @PostMapping
     public ResponseEntity<Void> createJobApplication(@RequestBody JobApplicationRequest request, Authentication authentication) {
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
         jobApplicationService.createJobApplication(request, appUser);
 
@@ -37,7 +37,7 @@ public class JobApplicationController {
     @GetMapping
     public ResponseEntity<List<JobApplicationResponse>> getUserJobApplications(Authentication authentication) {
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
         List<JobApplicationResponse> response = jobApplicationService.getUserJobApplications(appUser);
 
@@ -48,7 +48,7 @@ public class JobApplicationController {
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateJobApplication(@PathVariable("id") Long id, @RequestBody JobApplicationRequest request, Authentication authentication) {
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
         jobApplicationService.updateJobApplication(id, request, appUser);
 
@@ -60,7 +60,7 @@ public class JobApplicationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteJobApplication(@PathVariable("id") Long id, Authentication authentication) {
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
         jobApplicationService.deleteJobApplication(id, appUser);
 
@@ -71,7 +71,7 @@ public class JobApplicationController {
     @PatchMapping("/{id}") // Change Status
     public ResponseEntity<Void> updateJobStatus(@PathVariable Long id, @RequestBody UpdateJobStatusRequest request, Authentication authentication) {
 
-        AppUser appUser = authService.getCurrentUser(authentication);
+        AppUser appUser = userService.getUserByEmailOrThrow(authentication.getName());
 
         jobApplicationService.updateJobStatus(id, request, appUser);
 

@@ -14,7 +14,6 @@ import com.david.worktrack.token.confirmation.ConfirmationTokenService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -104,7 +103,6 @@ public class AuthService {
 
             String link = frontendUrl + "/reset-password?token=" + token.getToken();
 
-            // Send RESET password email
             emailService.sendResetPasswordEmail(
                     appUser.getEmail(),
                     appUser.getDisplayName(),
@@ -129,10 +127,5 @@ public class AuthService {
         if (!appUser.isEnabled()) {
             throw new BusinessException("Email not confirmed. Please confirm your email");
         }
-    }
-
-    public AppUser getCurrentUser(Authentication authentication) {
-
-        return userService.getUserByEmailOrThrow(authentication.getName());
     }
 }

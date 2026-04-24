@@ -3,7 +3,6 @@ package com.david.worktrack.user.service;
 import com.david.worktrack.auth.dto.RegisterRequest;
 import com.david.worktrack.user.dto.ChangePasswordRequest;
 import com.david.worktrack.user.dto.UpdateProfileRequest;
-import com.david.worktrack.user.dto.UserResponse;
 import com.david.worktrack.user.entity.AppUser;
 import com.david.worktrack.user.entity.AppUserRole;
 import com.david.worktrack.common.exception.BusinessException;
@@ -32,6 +31,7 @@ public class UserService {
         repository.save(appUser);
     }
 
+    // Returns user or throws exception if not found (required use cases like authentication)
     public AppUser getUserByEmailOrThrow(String email) {
         return repository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
@@ -59,6 +59,7 @@ public class UserService {
         return repository.save(appUser);
     }
 
+    // Returns Optional user, empty if not found (optional flows like forgot password)
     public Optional<AppUser> getUserByEmail(String email) {
 
         return repository.findByEmail(email);
@@ -81,16 +82,6 @@ public class UserService {
     public String encodePassword(String password) {
 
         return bCryptPasswordEncoder.encode(password);
-    }
-
-    public UserResponse getUser(AppUser appUser) {
-
-        return  new UserResponse(
-                appUser.getId(),
-                appUser.getEmail(),
-                appUser.getDisplayName(),
-                appUser.getAppUserRole());
-
     }
 
     public void updateProfileName(UpdateProfileRequest request, AppUser appUser) {
