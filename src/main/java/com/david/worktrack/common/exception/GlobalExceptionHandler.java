@@ -48,6 +48,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(EmailSendingException.class)
+    public ResponseEntity<ErrorResponse> handleEmailSendingException(EmailSendingException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
         return buildErrorResponse(

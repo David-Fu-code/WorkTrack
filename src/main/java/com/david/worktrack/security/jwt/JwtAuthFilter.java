@@ -1,6 +1,6 @@
 package com.david.worktrack.security.jwt;
 
-import com.david.worktrack.user.service.AppUserService;
+import com.david.worktrack.user.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,15 +25,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
 
     // Service used to load user details from database
-    private final AppUserService appUserService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     // Logger for debugging authentication flow
     private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
 
     // Constructor injection of required dependencies
-    public JwtAuthFilter(JwtService jwtService, AppUserService appUserService){
+    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService){
         this.jwtService = jwtService;
-        this.appUserService = appUserService;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
@@ -65,7 +65,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtService.isTokenValid(jwt, username)) {
 
                 // Load full user details (roles, authorities, etc.)
-                UserDetails userDetails = appUserService.loadUserByUsername(username);
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
                 // Create authentication token for Spring Security context
                 UsernamePasswordAuthenticationToken authToken =

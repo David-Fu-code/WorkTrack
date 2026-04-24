@@ -1,8 +1,8 @@
 package com.david.worktrack.token.passwordReset;
 import com.david.worktrack.user.entity.AppUser;
 import com.david.worktrack.common.exception.InvalidTokenException;
-import com.david.worktrack.user.service.AppUserService;
-import com.david.worktrack.common.email.EmailServiceImp;
+import com.david.worktrack.user.service.UserService;
+import com.david.worktrack.common.email.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,15 +17,15 @@ import java.util.UUID;
 public class PasswordResetService {
 
     private final PasswordResetTokenRepository resetTokenRepository;
-    private final EmailServiceImp emailServiceImp;
-    private final AppUserService appUserService;
+    private final EmailService emailService;
+    private final UserService userService;
 
     @Value("${app.backend.url}")
     private String backendUrl;
 
     public void createPasswordResetToken(String email) {
 
-        AppUser appUser = appUserService.getUserByEmailOrThrow(email);
+        AppUser appUser = userService.getUserByEmailOrThrow(email);
 
         // Generate token
         String token = UUID.randomUUID().toString();
@@ -40,7 +40,7 @@ public class PasswordResetService {
 
         String link = backendUrl + "/api/v1/auth/reset-password?token=" + token;
 
-        emailServiceImp.sendResetPasswordEmail(email, appUser.getDisplayName(), link);
+        emailService.sendResetPasswordEmail(email, appUser.getDisplayName(), link);
     }
 
     public void resetPassword(String token, String newPassword) {
@@ -56,7 +56,7 @@ public class PasswordResetService {
         }
 
         AppUser appUser = resetToken.getAppUser();
-        appUserService.updatePassword(appUser, newPassword);
+        userService.updatePassword(appUser, newPassword);
 
         resetToken.setUsed(true);
         resetTokenRepository.save(resetToken);

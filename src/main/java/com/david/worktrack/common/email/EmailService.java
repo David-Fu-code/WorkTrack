@@ -1,35 +1,45 @@
 package com.david.worktrack.common.email;
 
-
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService implements EmailSender{
+public class EmailService {
 
-    private final JavaMailSender emailSender;
+    private final EmailSender emailSender;
 
-    @Override
-    public void send(String to, String emailContent) {
-       try {
-           MimeMessage mimeMessage = emailSender.createMimeMessage();
+    public void sendConfirmationEmail(String email, String name, String link) {
 
-           MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-           helper.setText(emailContent, true);
-           helper.setTo(to);
-           helper.setSubject("Confirm your email");
-           helper.setFrom("example@example.com");
+        emailSender.send(
+                email,
+                "Confirm your email",
+                buildConfirmationEmail(name, link));
+    }
 
-           emailSender.send(mimeMessage);
+    public void sendResetPasswordEmail(String email, String name, String link) {
 
-       }catch (MessagingException e) {
-           throw new IllegalStateException("Failed to send email", e);
-       }
+        emailSender.send(
+                email,
+                "Reset your password",
+                buildResetPasswordEmail(name, link));
+    }
 
+    private String buildConfirmationEmail(String name, String link) {
+
+        return "<p>Hello " + name + ",</p>"
+                + "<p>Thank you for registering. Please click on the below link to activate your account:</p>"
+                + "<a href=\"" + link + "\">Confirm Account</a>"
+                + "<p>The link will expire in 15 minutes.</p>"
+                + "<p>See you soon!</p>";
+    }
+
+    private String buildResetPasswordEmail(String name, String link) {
+
+        return "<p>Hello " + name + ",</p>"
+                + "<p>You requested to reset your password. Please click on the link below to reset it:</p>"
+                + "<a href=\"" + link + "\">" + link + "</a>"  // Show full link
+                + "<p>This link will expire in 15 minutes.</p>"
+                + "<p>If you did not request this, you can ignore this email.</p>";
     }
 }
